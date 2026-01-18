@@ -24,8 +24,14 @@ async def lifespan(app: FastAPI):
     if not db_result:
         print("⚠️ Veritabanı olmadan başlatılıyor - API endpoint'leri sınırlı çalışacak")
     
-    # Upload dizini oluştur
-    os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+    # Upload dizini oluştur (serverless ortamlarda /tmp kullan)
+    try:
+        os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+    except OSError:
+        # Vercel gibi read-only file system'lerde /tmp kullan
+        settings.UPLOAD_DIR = "/tmp/uploads"
+        os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+        print(f"📁 Uploads dizini: {settings.UPLOAD_DIR}")
     
     yield
     
