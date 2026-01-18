@@ -4,9 +4,7 @@
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
-import os
 
 from app.config import get_settings
 from app.database import init_db
@@ -24,15 +22,7 @@ async def lifespan(app: FastAPI):
     if not db_result:
         print("⚠️ Veritabanı olmadan başlatılıyor - API endpoint'leri sınırlı çalışacak")
     
-    # Upload dizini oluştur (serverless ortamlarda /tmp kullan)
-    try:
-        os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-    except OSError:
-        # Vercel gibi read-only file system'lerde /tmp kullan
-        settings.UPLOAD_DIR = "/tmp/uploads"
-        os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-        print(f"📁 Uploads dizini: {settings.UPLOAD_DIR}")
-    
+
     yield
     
     # Kapanış
@@ -93,9 +83,6 @@ app.include_router(checkin_router, prefix="/v1")
 app.include_router(acil_kisi_router, prefix="/v1")
 app.include_router(alarm_router, prefix="/v1")
 
-# Static dosyalar (uploads)
-if os.path.exists(settings.UPLOAD_DIR):
-    app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
 
 
 # Sağlık kontrolü
